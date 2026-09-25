@@ -32,6 +32,19 @@ r.post('/sales', (req, res) => {
   const result = tx(() => {
     // --- Satış satırları ---
     const lines = items.map((it) => {
+      if (!it.variant_id) {
+        // Serbest satır: stokta tanımlı olmayan ürün/hizmet (tadilat ücreti, özel dikim vb.)
+        const name = str(it.name, { required: true, max: 150, name: 'Ürün adı' });
+        const qty = int(it.qty, { min: 1, max: 10000, name: 'Adet' });
+        const unit = money(it.unit_price, { name: 'Birim fiyat', required: true });
+        const discount = money(it.discount ?? 0, { name: 'Satır indirimi' });
+        if (discount > qty * unit) throw bad(`${name} için indirim, satır tutarını aşamaz`);
+        return {
+          v: { id: null, size: str(it.size, { max: 20 }) || '', color: str(it.color, { max: 40 }) || '', barcode: null },
+          p: { id: null, name, buy_price: isManager(req) ? money(it.unit_cost ?? 0, { name: 'Maliyet' }) : 0, vat_rate: req.store.default_vat },
+          qty, unit, gross: qty * unit, discount, net: qty * unit - discount, share: 0,
+        };
+      }
       const v = ownRow('variants', it.variant_id, sid, 'Ürün varyantı bulunamadı');
       const p = q.get('SELECT * FROM products WHERE id = ?', v.product_id);
       const qty = int(it.qty, { min: 1, max: 10000, name: 'Adet' });
@@ -117,7 +130,7 @@ r.post('/sales', (req, res) => {
         barcode: l.v.barcode, qty: l.qty, unit_price: l.unit, discount: l.discount, cart_discount_share: l.share,
         total: l.net - l.share, unit_cost: l.p.buy_price, vat_rate: l.p.vat_rate, created_at: now,
       });
-      moveStock({ storeId: sid, variantId: l.v.id, qty: -l.qty, type: 'sale', refType: 'sale', refId: saleId, userId: req.user.id, now });
+      if (l.v.id) moveStock({ storeId: sid, variantId: l.v.id, qty: -l.qty, type: 'sale', refType: 'sale', refId: saleId, userId: req.user.id, now });
     }
     for (const x of retLines) {
       const o = x.orig;
@@ -183,7 +196,8 @@ r.get('/sales', (req, res) => {
 });
 
 function saleDetail(req, sale) {
-  sale.items = q.all(`SELECT si.*, (SELECT no FROM sales WHERE id = (SELECT sale_id FROM sale_items WHERE id = si.return_of)) AS return_of_no
+  sale.items = q.all(`SELECT si.*, (SELECT no FROM sales WHERE id = (SELECT sale_id FROM sale_items WHERE id = si.return_of)) AS return_of_no,
+      (SELECT COALESCE(-SUM(x.total),0) FROM sale_items x WHERE x.return_of = si.id) AS refunded
     FROM sale_items si WHERE si.sale_id = ? ORDER BY si.id`, sale.id);
   sale.payments = q.all('SELECT method, amount FROM payments WHERE sale_id = ? ORDER BY id', sale.id);
   sale.customer = sale.customer_id ? q.get('SELECT id, name, phone FROM customers WHERE id = ?', sale.customer_id) : null;
@@ -215,7 +229,8 @@ r.get('/sales/returnable', (req, res) => {
   if (req.query.customer_id) { w += ' AND s.customer_id = ?'; params.push(Number(req.query.customer_id)); }
   if (req.query.barcode) { w += ' AND si.barcode = ?'; params.push(String(req.query.barcode).trim()); }
   if (params.length === 1) return res.json([]);
-  res.json(q.all(`SELECT si.*, s.no, s.created_at AS sale_date FROM sale_items si JOIN sales s ON s.id = si.sale_id
+  res.json(q.all(`SELECT si.*, s.no, s.created_at AS sale_date,
+      (SELECT COALESCE(-SUM(x.total),0) FROM sale_items x WHERE x.return_of = si.id) AS refunded FROM sale_items si JOIN sales s ON s.id = si.sale_id
     WHERE ${w} ORDER BY si.id DESC LIMIT 50`, ...params));
 });
 

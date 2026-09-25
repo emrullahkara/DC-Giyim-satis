@@ -11,8 +11,12 @@ export const bad = (msg) => new HttpError(400, msg);
 export const notFound = (msg = 'Kayıt bulunamadı') => new HttpError(404, msg);
 export const forbidden = (msg = 'Bu işlem için yetkiniz yok') => new HttpError(403, msg);
 
+// Yalnızca demo veri üretiminde (seed) geçmiş tarihli kayıt oluşturmak için kullanılır.
+let fakeNow = null;
+export function setFakeNow(d) { fakeNow = d; }
+
 /** Mağazanın saat dilimine göre 'YYYY-MM-DD HH:MM:SS' biçiminde yerel zaman. */
-export function localNow(tz = 'Europe/Istanbul', date = new Date()) {
+export function localNow(tz = 'Europe/Istanbul', date = fakeNow || new Date()) {
   try {
     return new Intl.DateTimeFormat('sv-SE', {
       timeZone: tz,
