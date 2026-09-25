@@ -1,0 +1,19 @@
+{
+  "name": "dc-giyim-satis",
+  "version": "1.0.0",
+  "description": "DC Giyim Satış — giyim mağazaları için hepsi bir arada mağaza yönetim sistemi (kasa, stok, müşteri, sipariş, personel, gelir-gider, raporlar)",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "dev": "node --watch --disable-warning=ExperimentalWarning server/index.js",
+    "seed": "node --disable-warning=ExperimentalWarning server/seed.js",
+    "test": "node --disable-warning=ExperimentalWarning --test tests/*.test.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
