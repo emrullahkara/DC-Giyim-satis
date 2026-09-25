@@ -1,0 +1,10 @@
+{
+  "name": "DC Giyim Satış",
+  "short_name": "DC Giyim",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#17151c",
+  "theme_color": "#17151c",
+  "lang": "tr",
+  "icons": [{ "src": "/img/logo.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

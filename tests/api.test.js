@@ -236,3 +236,12 @@ test('toplu indirim ve stok sayımı', async () => {
   const mv = await owner.get(`/api/products/${ctx.product.id}/movements`);
   assert.ok(mv.some((m) => m.type === 'count'));
 });
+
+test('serbest satır (stoksuz ürün/hizmet) satılabilir ve iade edilebilir', async () => {
+  const s = await owner.post('/api/sales', { items: [{ name: 'Paça tadilatı', qty: 1, unit_price: 15000 }], payments: [{ method: 'cash', amount: 15000 }] });
+  const d = await owner.get(`/api/sales/${s.id}`);
+  assert.equal(d.items[0].variant_id, null);
+  const r = await owner.post('/api/sales', { returns: [{ sale_item_id: d.items[0].id, qty: 1 }], payments: [{ method: 'cash', amount: -15000 }] });
+  assert.equal(r.total, -15000);
+  await assert.rejects(owner.post('/api/sales', { items: [{ qty: 1, unit_price: 100 }], payments: [{ method: 'cash', amount: 100 }] }), /Ürün adı/);
+});
