@@ -18,6 +18,7 @@
 - [Demo Veri](#-demo-veri)
 - [Yapı](#-yapı)
 - [Katkı Kılavuzu](#-katkı-kılavuzu)
+- [Entegrasyon Rehberi](docs/ENTEGRASYON.md)
 
 ---
 
@@ -534,6 +535,12 @@ Her sorgu `store_id` ile filtrelenir. Kullanıcı başka mağaza verisine erişe
 - **Kasa ekranı**: 60 FPS (smooth)
 - **SQL sorgular**: Index ile optimize edilmiş
 - **Concurrent**: WAL mode ile 10+ eş zamanlı kullanıcı
+
+---
+
+## 🔌 Entegrasyonlar
+
+Şu an uygulamada dış sistem entegrasyonu bulunmuyor (fiş "bilgi fişi" olarak basılır, WhatsApp yalnızca `wa.me` bağlantısıdır). Yazar kasa (ÖKC), e-Arşiv/e-Fatura, kart ödemesi, SMS/İYS, WhatsApp, e-posta, pazaryerleri (Trendyol/Hepsiburada), muhasebe yazılımları (Logo/Mikro/Luca/Paraşüt), barkod/etiket yazıcı, kargo ve banka entegrasyonlarının bu depoya nasıl ekleneceği için: **[docs/ENTEGRASYON.md](docs/ENTEGRASYON.md)**
 
 ---
 
